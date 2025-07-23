@@ -1,7 +1,9 @@
-import pygame
+try:
+    import pygame
+except ImportError:  # Allows importing this module without pygame installed
+    pygame = None
 import sys
 from bitboard_class import Position
-from solver import Solver
 
 
 # Game Constants
@@ -17,10 +19,13 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 
-# Game Initialization
-pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Connect 4 - Play vs AI")
+# Game Initialization (only if pygame is available)
+if pygame:
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Connect 4 - Play vs AI")
+else:
+    screen = None
 
 
 def draw_board(screen, position):
@@ -43,9 +48,17 @@ def draw_board(screen, position):
 def get_piece_at(position, col, row):
     # Returns the piece ('X' or 'O') at a given board position
     bitmask = 1 << ((col * (Position.HEIGHT + 1)) + row)
+    # First check if any piece occupies the requested cell
+    if not (position.mask & bitmask):
+        return None
+
+    # Determine which player's piece it is by inspecting both bitboards
     if position.current_position & bitmask:
+        # Bit belongs to the player whose turn it is
         return "X" if position.moves % 2 == 0 else "O"
-    return None
+    else:
+        # Bit belongs to the opponent
+        return "O" if position.moves % 2 == 0 else "X"
 
 
 def drop_piece(position, col):
@@ -90,6 +103,11 @@ def ai_move(position, solver):
 
 
 def main():
+    if not pygame:
+        raise RuntimeError("pygame is required to run this UI")
+
+    from solver import Solver
+
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     position = Position()
