@@ -43,9 +43,17 @@ def draw_board(screen, position):
 def get_piece_at(position, col, row):
     # Returns the piece ('X' or 'O') at a given board position
     bitmask = 1 << ((col * (Position.HEIGHT + 1)) + row)
+    # First check if any piece occupies the requested cell
+    if not (position.mask & bitmask):
+        return None
+
+    # Determine which player's piece it is by inspecting both bitboards
     if position.current_position & bitmask:
+        # Bit belongs to the player whose turn it is
         return "X" if position.moves % 2 == 0 else "O"
-    return None
+    else:
+        # Bit belongs to the opponent
+        return "O" if position.moves % 2 == 0 else "X"
 
 
 def drop_piece(position, col):
