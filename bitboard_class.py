@@ -65,7 +65,7 @@ class Position(object):
         # Returns a compact representation of the board position
         return self.current_position + self.mask
 
-    def possible_non_loosing_moves(self):
+    def possible_non_losing_moves(self):
         # Returns a bitmask of all possible moves that do NOT immediately lose
         if self.moves >= Position.WIDTH * Position.HEIGHT - 2:  # Board nearly full, prevent unnecessary deep checks
             return self.possible()

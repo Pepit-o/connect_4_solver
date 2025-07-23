@@ -1,10 +1,10 @@
 try:
     import pygame
-except ImportError:  # Allows importing this module without pygame installed
+except ImportError:
     pygame = None
 import sys
 from bitboard_class import Position
-
+from solver import Solver
 
 # Game Constants
 ROWS = Position.HEIGHT
@@ -21,50 +21,41 @@ YELLOW = (255, 255, 0)
 
 
 def init_screen():
-    """Initializes the pygame screen if pygame is available."""
     if not pygame:
         raise RuntimeError("pygame is required to run this UI")
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Connect 4 - Play vs AI")
+    pygame.display.set_caption("Connect 4 - Bitboard")
     return screen
 
 
 def draw_board(screen, position):
-    pygame.draw.rect(screen, BLUE, (0, CELL_SIZE, WIDTH, HEIGHT - CELL_SIZE))
+    pygame.draw.rect(screen, BLUE, (0, CELL_SIZE, WIDTH, HEIGHT))
 
-    for r in range(ROWS):
-        for c in range(COLS):
-            pygame.draw.circle(screen, BLACK, (c * CELL_SIZE + CELL_SIZE // 2, (r + 1) * CELL_SIZE + CELL_SIZE // 2),
-                               RADIUS)
-            piece = get_piece_at(position, c, r)
-            if piece == "X":
-                pygame.draw.circle(screen, RED, (c * CELL_SIZE + CELL_SIZE // 2, (r + 1) * CELL_SIZE + CELL_SIZE // 2),
-                                   RADIUS)
-            elif piece == "O":
-                pygame.draw.circle(screen, YELLOW,
-                                   (c * CELL_SIZE + CELL_SIZE // 2, (r + 1) * CELL_SIZE + CELL_SIZE // 2), RADIUS)
+    for r in range(Position.HEIGHT):
+        for c in range(Position.WIDTH):
+            pygame.draw.circle(
+                screen,
+                BLACK,
+                (c * CELL_SIZE + CELL_SIZE // 2, (r + 1) * CELL_SIZE + CELL_SIZE // 2),
+                RADIUS,
+            )
+            bitmask = 1 << ((c * (Position.HEIGHT + 1)) + r)
+            if position.mask & bitmask:
+                if position.current_position & bitmask:
+                    color = RED if position.moves % 2 == 0 else YELLOW
+                else:
+                    color = YELLOW if position.moves % 2 == 0 else RED
+                pygame.draw.circle(
+                    screen,
+                    color,
+                    (c * CELL_SIZE + CELL_SIZE // 2, (r + 1) * CELL_SIZE + CELL_SIZE // 2),
+                    RADIUS,
+                )
     pygame.display.update()
 
 
-def get_piece_at(position, col, row):
-    # Returns the piece ('X' or 'O') at a given board position
-    bitmask = 1 << ((col * (Position.HEIGHT + 1)) + row)
-    # First check if any piece occupies the requested cell
-    if not (position.mask & bitmask):
-        return None
-
-    # Determine which player's piece it is by inspecting both bitboards
-    if position.current_position & bitmask:
-        # Bit belongs to the player whose turn it is
-        return "X" if position.moves % 2 == 0 else "O"
-    else:
-        # Bit belongs to the opponent
-        return "O" if position.moves % 2 == 0 else "X"
-
-
 def drop_piece(position, col):
-    # Attempts to play a piece in the given column
     if position.can_play(col):
         position.play(col)
         return True
@@ -72,14 +63,13 @@ def drop_piece(position, col):
 
 
 def check_victory(position):
-    for col in range(COLS):
+    for col in range(Position.WIDTH):
         if position.is_winning_move(col):
             return True
     return False
 
 
 def ai_move(position, solver):
-    # AI selects the best move using negamax
     best_score = -Position.WIDTH * Position.HEIGHT
     best_col = None
 
@@ -91,7 +81,6 @@ def ai_move(position, solver):
             temp_pos.moves = position.moves
             temp_pos.play(col)
             score = -solver.solve(temp_pos)
-
             if score > best_score:
                 best_score = score
                 best_col = col
@@ -105,9 +94,8 @@ def ai_move(position, solver):
 
 
 def main():
-    from solver import Solver
-
     screen = init_screen()
+
     position = Position()
     solver = Solver()
     draw_board(screen, position)
@@ -132,22 +120,21 @@ def main():
                     if drop_piece(position, col):
                         draw_board(screen, position)
                         if check_victory(position):
-                            print("Player Wins!")
+                            print("Player wins!")
                             game_over = True
                         turn = 1 - turn
-
             else:
                 ai_col = ai_move(position, solver)
                 if ai_col is not None:
                     drop_piece(position, ai_col)
                     draw_board(screen, position)
                     if check_victory(position):
-                        print("AI Wins!")
+                        print("AI wins!")
                         game_over = True
                     turn = 1 - turn
 
         if game_over:
-            pygame.time.delay(3000)
+            pygame.time.wait(3000)
             pygame.quit()
             sys.exit()
 

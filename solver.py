@@ -34,7 +34,7 @@ class Solver:
 
         self.node_count += 1
 
-        next_moves = P.possible_non_loosing_moves()
+        next_moves = P.possible_non_losing_moves()
         if next_moves == 0:  # No non-losing move, opponent wins next move
             return -(Position.WIDTH * Position.HEIGHT - P.nb_moves()) // 2
 
