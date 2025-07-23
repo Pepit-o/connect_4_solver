@@ -4,7 +4,7 @@ import numpy as np
 class TranspositionTable:
     """
     Transposition table implemented as a fixed-size hash map
-    Uses 56-bit keys and 8-bit values (non-zero)
+    Uses 56-bit keys and 16-bit values (non-zero)
     """
 
     def __init__(self, size):
@@ -17,7 +17,7 @@ class TranspositionTable:
         self.T.fill((0, 0))  # Zero out both key and value
 
     def put(self, key, val):
-        """Stores a non-null 8-bit value for a 56-bit key."""
+        """Stores a non-null 16-bit value for a 56-bit key."""
         assert key < (1 << 56)
         index = key % self.size
         self.T[index] = (key, val)

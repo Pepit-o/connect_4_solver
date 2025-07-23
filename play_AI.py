@@ -1,7 +1,9 @@
-import pygame
+try:
+    import pygame
+except ImportError:  # Allows importing this module without pygame installed
+    pygame = None
 import sys
 from bitboard_class import Position
-from solver import Solver
 
 
 # Game Constants
@@ -17,10 +19,13 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 
-# Game Initialization
-pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Connect 4 - Play vs AI")
+# Game Initialization (only if pygame is available)
+if pygame:
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Connect 4 - Play vs AI")
+else:
+    screen = None
 
 
 def draw_board(screen, position):
@@ -98,6 +103,11 @@ def ai_move(position, solver):
 
 
 def main():
+    if not pygame:
+        raise RuntimeError("pygame is required to run this UI")
+
+    from solver import Solver
+
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     position = Position()
